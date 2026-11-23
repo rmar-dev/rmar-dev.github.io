@@ -662,8 +662,7 @@
   }
   var saved = null;
   try { saved = localStorage.getItem('lang'); } catch (e) {}
-  var browserPt = (navigator.language || '').toLowerCase().indexOf('pt') === 0;
-  setLang(saved || (browserPt ? 'pt' : 'en'));
+  setLang(saved === 'pt' ? 'pt' : 'en');
   document.querySelectorAll('[data-set-lang]').forEach(function (b) {
     b.addEventListener('click', function () { setLang(b.getAttribute('data-set-lang')); });
   });
