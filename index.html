@@ -60,9 +60,10 @@
 
   /* Ambient background: cursor spotlight + faint grid */
   .spotlight {
-    pointer-events: none; position: fixed; inset: 0; z-index: 0;
-    background: radial-gradient(600px circle at var(--mx, 30%) var(--my, 20%), var(--glow), transparent 60%);
-    transition: background 0.2s;
+    pointer-events: none; position: fixed; top: 0; left: 0; z-index: 0;
+    width: 1200px; height: 1200px; margin: -600px 0 0 -600px; border-radius: 50%;
+    background: radial-gradient(closest-side, var(--glow), transparent);
+    transform: translate3d(30vw, 20vh, 0); will-change: transform;
   }
   .grid-bg {
     pointer-events: none; position: fixed; inset: 0; z-index: 0; opacity: 0.5;
@@ -674,10 +675,19 @@
   document.getElementById('year').textContent = new Date().getFullYear();
 
   // Cursor spotlight (pointer devices only)
-  if (window.matchMedia('(pointer: fine)').matches) {
+  // Moves one composited layer with transform (no page-wide style recalc or repaint),
+  // easing towards the pointer each frame so the glow trails smoothly.
+  var spot = document.querySelector('.spotlight');
+  if (spot && window.matchMedia('(pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var tx = innerWidth * 0.3, ty = innerHeight * 0.2, cx = tx, cy = ty, raf = 0;
+    function step() {
+      cx += (tx - cx) * 0.18; cy += (ty - cy) * 0.18;
+      spot.style.transform = 'translate3d(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px,0)';
+      raf = (Math.abs(tx - cx) > 0.5 || Math.abs(ty - cy) > 0.5) ? requestAnimationFrame(step) : 0;
+    }
     window.addEventListener('pointermove', function (e) {
-      root.style.setProperty('--mx', e.clientX + 'px');
-      root.style.setProperty('--my', e.clientY + 'px');
+      tx = e.clientX; ty = e.clientY;
+      if (!raf) raf = requestAnimationFrame(step);
     }, { passive: true });
   }
 
